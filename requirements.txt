@@ -1,0 +1,4 @@
+pdfplumber
+openai
+google-auth
+google-api-python-client
