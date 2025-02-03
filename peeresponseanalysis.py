@@ -53,7 +53,7 @@ def extract_pdf_content(file):
 def generate_feedback_and_mark(response):
     """Generates feedback using OpenAI and assigns a grade based on the marking criteria."""
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
     prompt = f"""
