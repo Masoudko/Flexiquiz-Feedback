@@ -52,8 +52,6 @@ def extract_pdf_content(file):
 # Function to generate AI feedback and mark
 def generate_feedback_and_mark(response):
     """Generates feedback using OpenAI and assigns a grade based on the marking criteria."""
-    openai.api_key = import streamlit as st
-import openai
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
