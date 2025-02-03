@@ -1,9 +1,11 @@
 import streamlit as st
 import pdfplumber
 import openai
-import smtplib
-import os
-from email.mime.text import MIMEText
+import google.auth
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+import io
+
 
 # Load environment variables (set in Streamlit Cloud)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
