@@ -10,9 +10,10 @@ import os
 
 # Load environment variables (set in Streamlit Cloud)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-TEACHER_EMAIL = os.getenv("TEACHER_EMAIL")
+SENDER_EMAIL = st.secrets["SENDER_EMAIL"]
+GMAIL_APP_PASSWORD = st.secrets["GMAIL_APP_PASSWORD"]
+TEACHER_EMAIL = st.secrets["TEACHER_EMAIL"]
+
 
 # Define the marking criteria
 criteria = {
