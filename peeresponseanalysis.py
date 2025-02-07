@@ -94,8 +94,16 @@ def generate_feedback_and_mark(response):
         return None, None
 
 # Function to send email
+import smtplib
+from email.mime.text import MIMEText
+
 def send_email(name, student_email, feedback):
     """Sends feedback email to the teacher for approval before sending it to students."""
+    
+    SENDER_EMAIL = st.secrets["SENDER_EMAIL"]
+    GMAIL_APP_PASSWORD = st.secrets["GMAIL_APP_PASSWORD"]
+    TEACHER_EMAIL = st.secrets["TEACHER_EMAIL"]
+    
     subject = f"Approval Request: Feedback for {name}'s PEE Writing"
     body = f"""
     Dear Teacher,
@@ -123,9 +131,12 @@ def send_email(name, student_email, feedback):
             server.starttls()
             server.login(SENDER_EMAIL, GMAIL_APP_PASSWORD)
             server.sendmail(SENDER_EMAIL, TEACHER_EMAIL, msg.as_string())
-        st.success(f"Feedback sent to teacher for approval: {TEACHER_EMAIL}")
+            
+        st.success(f"✅ Feedback sent to teacher for approval: {TEACHER_EMAIL}")
+    
     except Exception as e:
-        st.error(f"Error sending email: {e}")
+        st.error(f"❌ Error sending email: {e}")
+
 
 # Streamlit UI
 st.title("PEE Writing Feedback System")
