@@ -159,3 +159,31 @@ if uploaded_file:
                 
                 if st.button("Send Feedback for Approval"):
                     send_email(name, email, feedback)
+
+from flask import Flask, request, jsonify
+
+# Initialize Flask App inside Streamlit
+app = Flask(__name__)
+
+# Flask API Endpoint to Accept WIX Requests
+@app.route('/process', methods=['POST'])
+def process_request():
+    """Receives data from WIX, runs AI feedback, and sends email."""
+    data = request.json  # Get JSON data from WIX
+
+    if not data or "response" not in data:
+        return jsonify({"error": "Invalid request"}), 400
+
+    # Generate feedback
+    feedback, grade = generate_feedback_and_mark(data["response"])
+
+    if not feedback:
+        return jsonify({"error": "Failed to generate feedback"}), 500
+
+    # Send the feedback via email
+    send_email(data["name"], data["email"], feedback)
+
+    return jsonify({"message": "Feedback generated and sent!"})
+
+if __name__ == "__main__":
+    app.run()
