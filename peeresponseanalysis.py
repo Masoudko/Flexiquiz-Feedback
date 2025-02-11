@@ -75,9 +75,24 @@ if st.button("Process Data from WIX"):
     except Exception as e:
         st.error(f"Error processing WIX data: {e}")
 
-# 📌 Step 2: Expose an endpoint for WIX
-def process_wix_request():
-    """ Function to handle requests from WIX. """
-    st.write("✅ Ready to receive WIX requests.")
 
-process_wix_request()
+import streamlit.components.v1 as components
+
+# 📌 Step 2: Expose an API-like endpoint for Wix
+query_params = st.experimental_get_query_params()
+
+if "trigger" in query_params:
+    try:
+        json_data = query_params.get("data", ["{}"])[0]  # Extract JSON data from query
+        data = json.loads(json_data)
+        response = data.get("response", {})
+        feedback, grade = generate_feedback_and_mark(response)
+
+        st.write("✅ AI Feedback Processed!")
+        st.json({"feedback": feedback, "grade": grade})  # Return JSON response
+    except Exception as e:
+        st.error(f"Error processing WIX data: {e}")
+
+# Display UI Message for Manual Testing
+st.write("✅ Ready to receive WIX requests.")
+components.html("<script>console.log('WIX API Ready');</script>", height=10)
