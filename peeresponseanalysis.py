@@ -6,7 +6,14 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
 import os
+import threading
 
+def run_flask():
+    """Runs the Flask API inside a separate thread."""
+    app.run(host="0.0.0.0", port=8501)
+
+# Start Flask in a separate thread so it doesn’t block Streamlit
+threading.Thread(target=run_flask, daemon=True).start()
 
 # Load environment variables (set in Streamlit Cloud)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
