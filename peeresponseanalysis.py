@@ -1,26 +1,11 @@
 import streamlit as st
 import pdfplumber
 import openai
-import google.auth
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
-import io
 import os
-import threading
+import json
 
-def run_flask():
-    """Runs the Flask API inside a separate thread."""
-    app.run(host="0.0.0.0", port=8501)
-
-# Start Flask in a separate thread so it doesn’t block Streamlit
-threading.Thread(target=run_flask, daemon=True).start()
-
-# Load environment variables (set in Streamlit Cloud)
+# Load API Keys from Streamlit secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SENDER_EMAIL = st.secrets["SENDER_EMAIL"]
-GMAIL_APP_PASSWORD = st.secrets["GMAIL_APP_PASSWORD"]
-TEACHER_EMAIL = st.secrets["TEACHER_EMAIL"]
-
 
 # Define the marking criteria
 criteria = {
@@ -34,36 +19,9 @@ criteria = {
                  "simple comments about language"]
 }
 
-# Function to extract content from PDF
-def extract_pdf_content(file):
-    """Extracts student responses (Point, Evidence, Explanation) from uploaded PDF."""
-    try:
-        with pdfplumber.open(file) as pdf:
-            text = "".join(page.extract_text() for page in pdf.pages if page.extract_text())
-            lines = [line.strip() for line in text.split("\n") if line.strip()]
-
-            name = next((line.split(" ", 1)[-1].strip() for line in lines if line.lower().startswith("name")), None)
-            email = next((line.split(" ", 1)[-1].strip() for line in lines if line.lower().startswith("email")), None)
-
-            response = {"Point": None, "Evidence": None, "Explanation": None}
-            keywords = {"1. Point": "Point", "2. Evidence": "Evidence", "3. Explanation": "Explanation"}
-
-            for i, line in enumerate(lines):
-                for keyword, key in keywords.items():
-                    if line.lower().startswith(keyword.lower()):
-                        response[key] = lines[i + 1].strip() if i + 1 < len(lines) else None
-
-            return {"name": name, "email": email, "response": response}
-    except Exception as e:
-        st.error(f"Error extracting content from PDF: {e}")
-        return None
-
-# Function to generate AI feedback and mark
+# Function to generate feedback
 def generate_feedback_and_mark(response):
-    """Generates feedback using OpenAI and assigns a grade based on the marking criteria."""
-
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-
+    openai.api_key = OPENAI_API_KEY
 
     prompt = f"""
     Provide feedback for the following response:
@@ -97,100 +55,29 @@ def generate_feedback_and_mark(response):
         feedback += f"\n\nGrade: {grade}"
         return feedback, grade
     except openai.error.OpenAIError as e:
-        st.error(f"OpenAI API error: {e}")
-        return None, None
+        return f"OpenAI API error: {e}", None
 
-# Function to send email
-import smtplib
-from email.mime.text import MIMEText
+# 📌 Step 1: Accept JSON data from WIX (Alternative to Flask)
+st.title("WIX API Integration for Feedback Generation")
 
-def send_email(name, student_email, feedback):
-    """Sends feedback email to the teacher for approval before sending it to students."""
-    
-    SENDER_EMAIL = st.secrets["SENDER_EMAIL"]
-    GMAIL_APP_PASSWORD = st.secrets["GMAIL_APP_PASSWORD"]
-    TEACHER_EMAIL = st.secrets["TEACHER_EMAIL"]
-    
-    subject = f"Approval Request: Feedback for {name}'s PEE Writing"
-    body = f"""
-    Dear Teacher,
+if "wix_data" not in st.session_state:
+    st.session_state["wix_data"] = None
 
-    Below is the feedback generated for {name} based on their PEE writing task:
-
-    Feedback:
-    {feedback}
-
-    Student's Email: {student_email}
-
-    Please review and approve this feedback.
-
-    Best regards,
-    Your Automated System
-    """
-
+# Handle incoming data
+if st.button("Process Data from WIX"):
     try:
-        msg = MIMEText(body)
-        msg["Subject"] = subject
-        msg["From"] = SENDER_EMAIL
-        msg["To"] = TEACHER_EMAIL
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(SENDER_EMAIL, GMAIL_APP_PASSWORD)
-            server.sendmail(SENDER_EMAIL, TEACHER_EMAIL, msg.as_string())
-            
-        st.success(f"✅ Feedback sent to teacher for approval: {TEACHER_EMAIL}")
-    
-    except Exception as e:
-        st.error(f"❌ Error sending email: {e}")
-
-
-# Streamlit UI
-st.title("PEE Writing Feedback System")
-st.write("Upload a student's response in PDF format to generate feedback and a grade.")
-
-uploaded_file = st.file_uploader("Upload PDF", type="pdf")
-
-if uploaded_file:
-    st.write("Processing file...")
-    extracted_content = extract_pdf_content(uploaded_file)
-    
-    if extracted_content:
-        name, email, response = extracted_content.get("name"), extracted_content.get("email"), extracted_content.get("response")
-        st.write(f"Extracted Name: {name}, Email: {email}")
-        if name and email and response:
+        json_data = st.text_area("Paste JSON from WIX here", "")
+        if json_data:
+            data = json.loads(json_data)
+            response = data.get("response", {})
             feedback, grade = generate_feedback_and_mark(response)
-            if feedback:
-                st.subheader("Generated Feedback")
-                st.write(feedback)
-                
-                if st.button("Send Feedback for Approval"):
-                    send_email(name, email, feedback)
+            st.success(f"Feedback Generated:\n{feedback}")
+    except Exception as e:
+        st.error(f"Error processing WIX data: {e}")
 
-from flask import Flask, request, jsonify
+# 📌 Step 2: Expose an endpoint for WIX
+def process_wix_request():
+    """ Function to handle requests from WIX. """
+    st.write("✅ Ready to receive WIX requests.")
 
-# Initialize Flask App inside Streamlit
-app = Flask(__name__)
-
-# Flask API Endpoint to Accept WIX Requests
-@app.route('/process', methods=['POST'])
-def process_request():
-    """Receives data from WIX, runs AI feedback, and sends email."""
-    data = request.json  # Get JSON data from WIX
-
-    if not data or "response" not in data:
-        return jsonify({"error": "Invalid request"}), 400
-
-    # Generate feedback
-    feedback, grade = generate_feedback_and_mark(data["response"])
-
-    if not feedback:
-        return jsonify({"error": "Failed to generate feedback"}), 500
-
-    # Send the feedback via email
-    send_email(data["name"], data["email"], feedback)
-
-    return jsonify({"message": "Feedback generated and sent!"})
-
-if __name__ == "__main__":
-    app.run()
+process_wix_request()
