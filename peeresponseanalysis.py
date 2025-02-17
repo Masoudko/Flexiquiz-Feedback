@@ -4,7 +4,7 @@ import openai
 import os
 import json
 
-# Load API Keys from Streamlit secrets
+# Load API Key from Streamlit Secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Define the marking criteria
@@ -57,42 +57,22 @@ def generate_feedback_and_mark(response):
     except openai.error.OpenAIError as e:
         return f"OpenAI API error: {e}", None
 
-# 📌 Step 1: Accept JSON data from WIX (Alternative to Flask)
+# ✅ Fix: Automatic API to receive data from WIX
 st.title("WIX API Integration for Feedback Generation")
 
 if "wix_data" not in st.session_state:
     st.session_state["wix_data"] = None
 
-# Handle incoming data
-if st.button("Process Data from WIX"):
+# Listen for incoming WIX requests
+query_params = st.query_params  # New Streamlit method
+if "data" in query_params:
     try:
-        json_data = st.text_area("Paste JSON from WIX here", "")
-        if json_data:
-            data = json.loads(json_data)
-            response = data.get("response", {})
-            feedback, grade = generate_feedback_and_mark(response)
-            st.success(f"Feedback Generated:\n{feedback}")
-    except Exception as e:
-        st.error(f"Error processing WIX data: {e}")
-
-
-import streamlit.components.v1 as components
-
-# 📌 Step 2: Expose an API-like endpoint for Wix
-query_params = st.experimental_get_query_params()
-
-if "trigger" in query_params:
-    try:
-        json_data = query_params.get("data", ["{}"])[0]  # Extract JSON data from query
+        json_data = query_params["data"]
         data = json.loads(json_data)
         response = data.get("response", {})
         feedback, grade = generate_feedback_and_mark(response)
-
-        st.write("✅ AI Feedback Processed!")
-        st.json({"feedback": feedback, "grade": grade})  # Return JSON response
+        st.success(f"Feedback Generated:\n{feedback}")
     except Exception as e:
         st.error(f"Error processing WIX data: {e}")
-
-# Display UI Message for Manual Testing
-st.write("✅ Ready to receive WIX requests.")
-components.html("<script>console.log('WIX API Ready');</script>", height=10)
+else:
+    st.write("✅ Ready to receive WIX requests.")
