@@ -5,7 +5,7 @@ import os
 import json
 
 # Load API Key from Streamlit Secrets
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]  # ✅ Fixed API key retrieval
 
 # Define the marking criteria
 criteria = {
@@ -57,22 +57,29 @@ def generate_feedback_and_mark(response):
     except openai.error.OpenAIError as e:
         return f"OpenAI API error: {e}", None
 
-# ✅ Fix: Automatic API to receive data from WIX
-st.title("WIX API Integration for Feedback Generation")
+# ✅ Fix: Streamlit API to receive data from Wix
+st.title("AI Feedback API for Wix")
 
-if "wix_data" not in st.session_state:
-    st.session_state["wix_data"] = None
+# Listen for incoming Wix requests
+st.write("✅ Ready to receive AI feedback requests.")
 
-# Listen for incoming WIX requests
-query_params = st.query_params  # New Streamlit method
-if "data" in query_params:
+if st.request.method == "POST":
     try:
-        json_data = query_params["data"]
-        data = json.loads(json_data)
+        data = st.request.json()  # ✅ Fix: Properly handle POST request
         response = data.get("response", {})
-        feedback, grade = generate_feedback_and_mark(response)
-        st.success(f"Feedback Generated:\n{feedback}")
+
+        # Validate input
+        if not response:
+            st.error("❌ Error: No response data received.")
+            st.json({"error": "Missing response data."})
+        else:
+            feedback, grade = generate_feedback_and_mark(response)
+            result = {
+                "feedback": feedback,
+                "grade": grade
+            }
+            st.success("✅ Feedback generated successfully!")
+            st.json(result)  # ✅ Return structured JSON response
     except Exception as e:
-        st.error(f"Error processing WIX data: {e}")
-else:
-    st.write("✅ Ready to receive WIX requests.")
+        st.error(f"❌ Error processing request: {e}")
+        st.json({"error": str(e)})
