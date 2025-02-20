@@ -4,6 +4,19 @@ import openai
 import os
 import json
 
+# ✅ CORS FIX: Allow requests from Wix
+st.set_page_config(page_title="Feedback Generator")
+
+def add_cors_headers():
+    """ Adds CORS headers to allow requests from Wix. """
+    st.write('<script>document.domain = "wixsite.com";</script>', unsafe_allow_html=True)
+
+add_cors_headers()
+
+# Load API Key from Streamlit Secrets
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
 # Load API Key from Streamlit Secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]  # ✅ Fixed API key retrieval
 
