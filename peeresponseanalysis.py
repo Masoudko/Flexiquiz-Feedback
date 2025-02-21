@@ -73,7 +73,7 @@ st.title("AI Feedback API for Wix")
 st.write("✅ Ready to receive AI feedback requests.")    
 
 # Get query parameters from URL (for GET requests)
-query_params = st.experimental_get_query_params()
+query_params = st.query_params  # ✅ New Streamlit method
 if "data" in query_params:
     try:
         json_data = query_params["data"]
