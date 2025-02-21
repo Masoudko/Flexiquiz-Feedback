@@ -66,29 +66,32 @@ def generate_feedback_and_mark(response):
     except openai.error.OpenAIError as e:
         return f"OpenAI API error: {e}", None
 
-# ✅ Fix: Streamlit API to receive data from Wix
+# ✅ Fix: Handle GET and POST requests correctly
 st.title("AI Feedback API for Wix")
 
 # Listen for incoming Wix requests  
 st.write("✅ Ready to receive AI feedback requests.")    
 
-# Get query parameters from URL (for GET requests)
-query_params = st.query_params  # ✅ New Streamlit method
+# 🛠 **Fix #1: Properly Handle GET Requests (Query Parameters)**
+query_params = st.query_params
 if "data" in query_params:
     try:
         json_data = query_params["data"]
         data = json.loads(json_data)
         response = data.get("response", {})
-        
-        # Generate feedback
+
         feedback, grade = generate_feedback_and_mark(response)
-        st.success(f"Feedback Generated:\n{feedback}")
-    
+        st.success(f"✅ Feedback Generated:\n{feedback}")
+
     except Exception as e:
-        st.error(f"Error processing WIX data: {e}")
+        st.error(f"❌ Error processing WIX data: {e}")
 
+# 🛠 **Fix #2: Properly Handle POST Requests (Wix Backend)**
+if st.request.method == "POST":
+    try:
+        request_data = st.request.json  # ✅ Read JSON payload
+        response = request_data.get("response", {})
 
-        # Validate input
         if not response:
             st.error("❌ Error: No response data received.")
             st.json({"error": "Missing response data."})
@@ -100,6 +103,7 @@ if "data" in query_params:
             }
             st.success("✅ Feedback generated successfully!")
             st.json(result)  # ✅ Return structured JSON response
+
     except Exception as e:
         st.error(f"❌ Error processing request: {e}")
         st.json({"error": str(e)})
