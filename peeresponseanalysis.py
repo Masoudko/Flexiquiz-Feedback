@@ -69,13 +69,24 @@ def generate_feedback_and_mark(response):
 # ✅ Fix: Streamlit API to receive data from Wix
 st.title("AI Feedback API for Wix")
 
-# Listen for incoming Wix requests
-st.write("✅ Ready to receive AI feedback requests.")
+# Listen for incoming Wix requests  
+st.write("✅ Ready to receive AI feedback requests.")    
 
-if st.request.method == "POST":
+# Get query parameters from URL (for GET requests)
+query_params = st.experimental_get_query_params()
+if "data" in query_params:
     try:
-        data = st.request.json()  # ✅ Fix: Properly handle POST request
+        json_data = query_params["data"]
+        data = json.loads(json_data)
         response = data.get("response", {})
+        
+        # Generate feedback
+        feedback, grade = generate_feedback_and_mark(response)
+        st.success(f"Feedback Generated:\n{feedback}")
+    
+    except Exception as e:
+        st.error(f"Error processing WIX data: {e}")
+
 
         # Validate input
         if not response:
