@@ -3,8 +3,6 @@ import pdfplumber
 import openai
 import os
 import json
-streamlit>=1.30.0
-
 
 # ✅ CORS FIX: Allow requests from Wix
 st.set_page_config(page_title="Feedback Generator")
