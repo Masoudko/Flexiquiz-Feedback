@@ -14,10 +14,6 @@ def add_cors_headers():
 add_cors_headers()
 
 # Load API Key from Streamlit Secrets
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-
-# Load API Key from Streamlit Secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]  # ✅ Fixed API key retrieval
 
 # Define the marking criteria
