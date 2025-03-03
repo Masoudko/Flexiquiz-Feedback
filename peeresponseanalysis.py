@@ -57,17 +57,39 @@ st.title("AI Feedback API for Wix")
 st.write("✅ Ready to receive AI feedback requests.")
 
 # 1. Handle GET requests (Query Parameters)
-query_params = st.query_params()
-if "data" in query_params:
-    try:
-        json_data = query_params["data"][0]
-        data = json.loads(json_data)
-        response = data.get("response", {})
-        feedback, grade = generate_feedback_and_mark(response)
-        st.success(f"✅ Feedback Generated:\n{feedback}")
-    except (json.JSONDecodeError, KeyError, IndexError) as e:
-        st.error(f"❌ Error processing WIX data: {e}")
+#query_params = st.query_params()
+#if "data" in query_params:
+#    try:
+#        json_data = query_params["data"][0]
+#        data = json.loads(json_data)
+#        response = data.get("response", {})
+#        feedback, grade = generate_feedback_and_mark(response)
+#        st.success(f"✅ Feedback Generated:\n{feedback}")
+#    except (json.JSONDecodeError, KeyError, IndexError) as e:
+#        st.error(f"❌ Error processing WIX data: {e}")
 
+
+# Handle POST requests
+if st.query_params().get("process_post", [True])[0]:
+    try:
+        request_data = st.session_state.posted_data
+        response = request_data.get("response", {})
+        if not response:
+            st.error("❌ Error: No response data received.")
+        else:
+            feedback, grade = generate_feedback_and_mark(response)
+            #send email.
+            try:
+                yag = yagmail.SMTP('your_email@gmail.com', 'your_email_password')
+                contents = [feedback]
+                yag.send('teacher_email@school.com', 'AI Feedback', contents)
+                st.success("✅ Feedback sent to teacher.")
+            except Exception as e:
+                st.error(f"❌ Error sending email: {e}")
+
+        st.session_state.posted_data = None
+    except (json.JSONDecodeError, KeyError) as e:
+        st.error(f"❌ Error processing request: {e}")
 
 # 2. Handle POST requests (Simulated for testing)
 if "posted_data" not in st.session_state:
