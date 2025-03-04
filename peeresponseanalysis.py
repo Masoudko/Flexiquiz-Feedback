@@ -1,6 +1,7 @@
 import streamlit as st
 import json
-import openai  # Make sure openai is imported
+import openai
+import yagmail
 
 st.set_page_config(page_title="Feedback Generator")
 
@@ -56,9 +57,10 @@ def generate_feedback_and_mark(response):
 st.title("AI Feedback API for Wix")
 st.write("✅ Ready to receive AI feedback requests.")
 
+if "posted_data" not in st.session_state:
+    st.session_state.posted_data = None
 
-# Handle POST requests
-if st.query_params().get("process_post", [True])[0]:
+if st.experimental_get_query_params().get("process_post", [True])[0]:
     try:
         request_data = st.session_state.posted_data
         response = request_data.get("response", {})
@@ -78,28 +80,6 @@ if st.query_params().get("process_post", [True])[0]:
         st.session_state.posted_data = None
     except (json.JSONDecodeError, KeyError) as e:
         st.error(f"❌ Error processing request: {e}")
-
-# 2. Handle POST requests (Simulated for testing)
-if "posted_data" not in st.session_state:
-    st.session_state.posted_data = None
-
-if st.experimental_get_query_params().get("process_post", [False])[0]:
-    try:
-        if st.session_state.posted_data:
-            request_data = st.session_state.posted_data
-            response = request_data.get("response", {})
-            if not response:
-                st.error("❌ Error: No response data received.")
-                st.json({"error": "Missing response data."})
-            else:
-                feedback, grade = generate_feedback_and_mark(response)
-                result = {"feedback": feedback, "grade": grade}
-                st.success("✅ Feedback generated successfully!")
-                st.json(result)
-            st.session_state.posted_data = None
-    except (json.JSONDecodeError, KeyError) as e:
-        st.error(f"❌ Error processing request: {e}")
-        st.json({"error": str(e)})
 
 # Simulate a POST Request (for testing within Streamlit):
 st.subheader("Simulate POST Request")
