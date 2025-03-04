@@ -60,7 +60,7 @@ st.write("✅ Ready to receive AI feedback requests.")
 if "posted_data" not in st.session_state:
     st.session_state.posted_data = None
 
-if st.experimental_get_query_params().get("process_post", [True])[0]:
+if st.query_params.get("process_post", ["True"])[0] == "True":
     try:
         request_data = st.session_state.posted_data
         response = request_data.get("response", {})
