@@ -56,18 +56,6 @@ def generate_feedback_and_mark(response):
 st.title("AI Feedback API for Wix")
 st.write("✅ Ready to receive AI feedback requests.")
 
-# 1. Handle GET requests (Query Parameters)
-#query_params = st.query_params()
-#if "data" in query_params:
-#    try:
-#        json_data = query_params["data"][0]
-#        data = json.loads(json_data)
-#        response = data.get("response", {})
-#        feedback, grade = generate_feedback_and_mark(response)
-#        st.success(f"✅ Feedback Generated:\n{feedback}")
-#    except (json.JSONDecodeError, KeyError, IndexError) as e:
-#        st.error(f"❌ Error processing WIX data: {e}")
-
 
 # Handle POST requests
 if st.query_params().get("process_post", [True])[0]:
