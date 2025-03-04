@@ -70,9 +70,9 @@ if st.experimental_get_query_params().get("process_post", [True])[0]:
             feedback, grade = generate_feedback_and_mark(response)
             #send email.
             try:
-                yag = yagmail.SMTP('your_email@gmail.com', 'your_email_password')
+                yag = yagmail.SMTP('results.flexiquiz@gmail.com', 'your_email_password')
                 contents = [feedback]
-                yag.send('teacher_email@school.com', 'AI Feedback', contents)
+                yag.send('masoud.motlagh@cambridgeschool.eu', 'AI Feedback', contents)
                 st.success("✅ Feedback sent to teacher.")
             except Exception as e:
                 st.error(f"❌ Error sending email: {e}")
