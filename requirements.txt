@@ -5,3 +5,4 @@ openai==0.28
 google-auth
 google-api-python-client
 flask
+yagmail
